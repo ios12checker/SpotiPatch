@@ -1,0 +1,30 @@
+# Build outputs
+*.exe
+*.zip
+*.dll
+*.pdb
+SpotiPatch-Release/
+
+# .NET build folders
+bin/
+obj/
+
+# Downloaded scripts ( fetched at build time )
+Source/SpotiPatch-Installer/Scripts/
+
+# Logs and data
+Data/
+*.log
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp

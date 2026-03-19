@@ -1,0 +1,487 @@
+<Window x:Class="SpotiPatch.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SpotiPatch Installer"
+        Width="900"
+        Height="750"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="{StaticResource BackgroundDarkBrush}"
+        ResizeMode="NoResize"
+        FontFamily="{StaticResource SpotifyFont}">
+    
+    <Window.Resources>
+        <!-- Window Shadow Effect -->
+        <DropShadowEffect x:Key="WindowShadow" 
+                          ShadowDepth="0" 
+                          BlurRadius="20" 
+                          Color="Black" 
+                          Opacity="0.5"/>
+        
+        <!-- Card Shadow -->
+        <DropShadowEffect x:Key="CardShadow" 
+                          ShadowDepth="0" 
+                          BlurRadius="15" 
+                          Color="Black" 
+                          Opacity="0.3"/>
+    </Window.Resources>
+    
+    <Border Effect="{StaticResource WindowShadow}" 
+            CornerRadius="12"
+            Background="{StaticResource BackgroundDarkBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Top Accent Bar -->
+            <Border Grid.Row="0" 
+                    Height="3" 
+                    Background="{StaticResource SpotifyGreenBrush}"/>
+            
+            <!-- Window Controls -->
+            <StackPanel Grid.Row="0" 
+                        HorizontalAlignment="Right" 
+                        VerticalAlignment="Top"
+                        Margin="0,10,15,0"
+                        Orientation="Horizontal">
+                <Button x:Name="CloseButton"
+                        Content="&#x2715;"
+                        Width="32"
+                        Height="32"
+                        Background="Transparent"
+                        Foreground="{StaticResource TextSecondaryBrush}"
+                        BorderThickness="0"
+                        FontSize="14"
+                        Click="CloseButton_Click"
+                        Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" 
+                                                CornerRadius="16">
+                                            <ContentPresenter HorizontalAlignment="Center" 
+                                                              VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                    <Setter Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+            
+            <!-- Main Content -->
+            <ScrollViewer Grid.Row="1" 
+                          Style="{StaticResource SleekScrollViewer}"
+                          Margin="0,0,0,0">
+                <Grid Margin="40,30,40,20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Logo Section -->
+                    <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,30">
+                        <TextBlock Text="SpotiPatch"
+                                   FontSize="42"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource SpotifyGreenBrush}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Spicetify Installer for Windows"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                        <TextBlock FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,8,0,0">
+                            <Run>by </Run>
+                            <Run FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}">Lil_Batti/iOS12Checker</Run>
+                        </TextBlock>
+                    </StackPanel>
+                    
+                    <!-- Main Card -->
+                    <Border Grid.Row="1" 
+                            Style="{StaticResource CardStyle}"
+                            Effect="{StaticResource CardShadow}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Section Title -->
+                            <TextBlock Grid.Row="0"
+                                       Text="What will be installed"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       Margin="0,0,0,20"/>
+                            
+                            <!-- Feature Grid (2x2) -->
+                            <Grid Grid.Row="1" Margin="0,0,0,20">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Feature 1: CLI (Top Left) -->
+                                <Border Grid.Row="0" Grid.Column="0"
+                                        Background="{StaticResource ElevatedBackgroundBrush}" 
+                                        CornerRadius="8" 
+                                        Padding="14,12"
+                                        Margin="0,0,8,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0"
+                                                Background="{StaticResource SpotifyGreenBrush}"
+                                                Width="36"
+                                                Height="36"
+                                                CornerRadius="18"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,12,0">
+                                            <TextBlock Text="CLI"
+                                                       FontSize="11"
+                                                       FontWeight="Bold"
+                                                       Foreground="Black"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Spicetify CLI"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="Core customization engine"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                                
+                                <!-- Feature 2: Marketplace (Top Right) -->
+                                <Border Grid.Row="0" Grid.Column="1"
+                                        Background="{StaticResource ElevatedBackgroundBrush}" 
+                                        CornerRadius="8" 
+                                        Padding="14,12"
+                                        Margin="8,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0"
+                                                Background="{StaticResource SpotifyGreenBrush}"
+                                                Width="36"
+                                                Height="36"
+                                                CornerRadius="18"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,12,0">
+                                            <TextBlock Text="MKT"
+                                                       FontSize="10"
+                                                       FontWeight="Bold"
+                                                       Foreground="Black"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Marketplace"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="Themes &amp; extensions"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                                
+                                <!-- Feature 3: Auto-Config (Bottom Left) -->
+                                <Border Grid.Row="1" Grid.Column="0"
+                                        Background="{StaticResource ElevatedBackgroundBrush}" 
+                                        CornerRadius="8" 
+                                        Padding="14,12"
+                                        Margin="0,8,8,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0"
+                                                Background="{StaticResource SpotifyGreenBrush}"
+                                                Width="36"
+                                                Height="36"
+                                                CornerRadius="18"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,12,0">
+                                            <TextBlock Text="AUTO"
+                                                       FontSize="9"
+                                                       FontWeight="Bold"
+                                                       Foreground="Black"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="Auto-Config"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="Detects Spotify automatically"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                                
+                                <!-- Feature 4: One-Click Apply (Bottom Right) -->
+                                <Border Grid.Row="1" Grid.Column="1"
+                                        Background="{StaticResource ElevatedBackgroundBrush}" 
+                                        CornerRadius="8" 
+                                        Padding="14,12"
+                                        Margin="8,8,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0"
+                                                Background="{StaticResource SpotifyGreenBrush}"
+                                                Width="36"
+                                                Height="36"
+                                                CornerRadius="18"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,12,0">
+                                            <TextBlock Text="1-CLK"
+                                                       FontSize="8"
+                                                       FontWeight="Bold"
+                                                       Foreground="Black"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="One-Click Apply"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="Instant customization"
+                                                       FontSize="11"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                            
+                            <!-- Prerequisites Info -->
+                            <Border Grid.Row="2"
+                                    Background="{StaticResource ElevatedBackgroundBrush}"
+                                    CornerRadius="8"
+                                    Padding="20,16"
+                                    Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="&#xE946;"
+                                               FontFamily="Segoe UI Symbol"
+                                               FontSize="20"
+                                               Foreground="{StaticResource SpotifyGreenBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,12,0"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Before Installing"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBlock Text="Spotify must be installed from spotify.com (not Microsoft Store) and you need to log in for at least 60 seconds before installing."
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Helpful Tips -->
+                            <Border Grid.Row="3"
+                                    Background="{StaticResource ElevatedBackgroundBrush}"
+                                    CornerRadius="8"
+                                    Padding="20,16"
+                                    Margin="0,0,0,20">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="&#xE8D4;"
+                                               FontFamily="Segoe UI Symbol"
+                                               FontSize="20"
+                                               Foreground="{StaticResource SpotifyGreenBrush}"
+                                               VerticalAlignment="Top"
+                                               Margin="0,2,12,0"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Helpful Tips"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   Margin="0,0,0,8"/>
+                                        <TextBlock FontSize="12"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,4">
+                                            <Run FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}">After Spotify updates:</Run>
+                                            <Run> Run </Run>
+                                            <Run FontFamily="Consolas" Foreground="{StaticResource SpotifyGreenBrush}">spicetify restore backup apply</Run>
+                                        </TextBlock>
+                                        <TextBlock FontSize="12"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,4">
+                                            <Run FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}">Marketplace:</Run>
+                                            <Run> Look for the new tab in Spotify's left sidebar after installation</Run>
+                                        </TextBlock>
+                                        <TextBlock FontSize="12"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   TextWrapping="Wrap">
+                                            <Run FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}">Scoop users:</Run>
+                                            <Run> The installer will auto-detect your Spotify location</Run>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Status Section -->
+                            <Grid Grid.Row="4" Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="Status"
+                                           FontSize="14"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           Margin="0,0,15,0"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           x:Name="StatusText"
+                                           Text="Ready to install"
+                                           FontSize="13"
+                                           Foreground="{StaticResource SpotifyGreenBrush}"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                            
+                            <!-- Progress Bar -->
+                            <ProgressBar Grid.Row="5"
+                                         x:Name="InstallProgress"
+                                         Style="{StaticResource SpotifyProgressBar}"
+                                         Value="0"
+                                         Margin="0,0,0,12"/>
+                            
+                        </Grid>
+                    </Border>
+                    
+                    <!-- Log Output -->
+                    <Border Grid.Row="2"
+                            Background="{StaticResource ElevatedBackgroundBrush}"
+                            CornerRadius="8"
+                            Padding="12"
+                            Margin="0,15,0,0"
+                            Height="120">
+                        <ScrollViewer Style="{StaticResource SleekScrollViewer}"
+                                      x:Name="LogScrollViewer">
+                            <TextBlock x:Name="LogText"
+                                       FontFamily="Consolas, monospace"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </Border>
+                    
+                </Grid>
+            </ScrollViewer>
+            
+            <!-- Bottom Action Bar -->
+            <Border Grid.Row="2" 
+                    Background="{StaticResource CardBackgroundBrush}"
+                    Padding="40,24"
+                    CornerRadius="0,0,12,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}">
+                            <Run FontWeight="SemiBold">Created by Lil_Batti/iOS12Checker</Run>
+                        </TextBlock>
+                        <TextBlock FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,2,0,0">
+                            Powered by <Hyperlink NavigateUri="https://github.com/spicetify" RequestNavigate="Hyperlink_RequestNavigate" Foreground="{StaticResource TextSecondaryBrush}">github.com/spicetify</Hyperlink> - Made with love for the community
+                        </TextBlock>
+                    </StackPanel>
+                    
+                    <Button Grid.Column="1"
+                            x:Name="InstallButton"
+                            Content="Install Spicetify"
+                            Style="{StaticResource SpotifyButton}"
+                            Click="InstallButton_Click"
+                            Margin="0,0,16,0"/>
+                    
+                    <Button Grid.Column="2"
+                            x:Name="UninstallButton"
+                            Content="Uninstall"
+                            Style="{StaticResource SecondaryButton}"
+                            Click="UninstallButton_Click"
+                            Margin="0,0,8,0"/>
+                    
+                    <Button Grid.Column="3"
+                            x:Name="CancelButton"
+                            Content="Close"
+                            Style="{StaticResource SecondaryButton}"
+                            Click="CloseButton_Click"/>
+                </Grid>
+            </Border>
+            
+        </Grid>
+    </Border>
+</Window>

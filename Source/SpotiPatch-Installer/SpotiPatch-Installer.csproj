@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>SpotiPatch</RootNamespace>
+    <AssemblyName>SpotiPatch-Installer</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <!-- <ApplicationIcon>spotify-icon.ico</ApplicationIcon> -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <Version>1.0.0</Version>
+    <Company>SpotiPatch</Company>
+    <Product>SpotiPatch Installer</Product>
+    <Description>Professional Spicetify Installer for Windows</Description>
+    <Copyright>Copyright © 2024</Copyright>
+    <!-- DPI Awareness for crisp text on high-DPI displays -->
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Scripts\spicetify-cli-install.ps1" />
+    <None Remove="Scripts\spicetify-marketplace-install.ps1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\spicetify-cli-install.ps1" />
+    <EmbeddedResource Include="Scripts\spicetify-marketplace-install.ps1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MaterialDesignThemes" Version="4.9.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,47 @@
+﻿name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Build WPF Application
+      run: |
+        cd Source/SpotiPatch-Installer
+        dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ../../publish
+        
+    - name: Copy PowerShell Script
+      run: |
+        Copy-Item SpotiPatch-Installer.ps1 publish/
+        
+    - name: Create Release Archive
+      run: |
+        Compress-Archive -Path publish/* -DestinationPath SpotiPatch-Installer-${{ github.ref_name }}.zip
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: SpotiPatch-Installer
+        path: SpotiPatch-Installer-${{ github.ref_name }}.zip
+        
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: SpotiPatch-Installer-${{ github.ref_name }}.zip
+        draft: true
+        generate_release_notes: true

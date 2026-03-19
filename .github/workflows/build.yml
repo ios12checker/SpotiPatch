@@ -23,6 +23,7 @@ jobs:
       run: |
         New-Item -ItemType Directory -Force -Path Source/SpotiPatch-Installer/Scripts
         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spicetify/cli/main/install.ps1" -OutFile "Source/SpotiPatch-Installer/Scripts/spicetify-cli-install.ps1"
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spicetify/marketplace/main/install.ps1" -OutFile "Source/SpotiPatch-Installer/Scripts/spicetify-marketplace-install.ps1"
         
     - name: Build WPF Application
       run: |

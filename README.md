@@ -42,14 +42,14 @@ Before installing SpotiPatch, make sure you have:
 
 ### Option 1: GUI Installer (Recommended)
 
-1. Download `SpotiPatch-Installer.exe` from the [Releases](https://github.com/LilBatti/iOS12Checker/SpotiPatch/releases) page
+1. Download `SpotiPatch-Installer.exe` from the [Releases](https://github.com/iOS12Checker/SpotiPatch/releases) page
 2. Double-click to run (no installation required)
 3. Click **"Install Spicetify"**
 4. Restart Spotify and enjoy your new Marketplace tab!
 
 ### Option 2: PowerShell Script
 
-1. Download `SpotiPatch-Installer.ps1` from the [Releases](https://github.com/LilBatti/iOS12Checker/SpotiPatch/releases) page
+1. Download `SpotiPatch-Installer.ps1` from the [Releases](https://github.com/iOS12Checker/SpotiPatch/releases) page
 2. Right-click → **"Run with PowerShell"**
 3. Press `I` to install
 4. Restart Spotify
@@ -58,19 +58,20 @@ Before installing SpotiPatch, make sure you have:
 
 ```powershell
 # Run directly from GitHub (not recommended for security)
-irm https://raw.githubusercontent.com/LilBatti/iOS12Checker/SpotiPatch/main/SpotiPatch-Installer.ps1 | iex
+irm https://raw.githubusercontent.com/iOS12Checker/SpotiPatch/main/SpotiPatch-Installer.ps1 | iex
 ```
 
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="docs/images/gui-screenshot.png" alt="SpotiPatch GUI" width="600">
+  <img width="895" height="745" alt="image" src="https://github.com/user-attachments/assets/4110a4d5-d0a6-4755-83ce-ff5c784a813e" />
   <br>
   <i>Modern WPF Interface with Spotify-inspired design</i>
 </p>
 
 <p align="center">
-  <img src="docs/images/powershell-screenshot.png" alt="PowerShell Interface" width="600">
+  <img width="1119" height="629" alt="d" src="https://github.com/user-attachments/assets/7b4244e8-6d6c-4fb6-a722-8fd29250712a" />
+
   <br>
   <i>Clean PowerShell console interface</i>
 </p>
@@ -128,21 +129,16 @@ dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=
 
 ## 📝 Changelog
 
-### v1.8 (Current)
+### v1.8
 - ✅ Fixed apply command for Spicetify v2.42.14
 - ✅ Added proper credits
 - ✅ Improved error handling
 - ✅ Background job execution for reliability
 - ✅ Added uninstall functionality
 
-### v1.7
-- ✅ Initial release with WPF GUI
-- ✅ PowerShell console installer
-- ✅ Auto-detection of existing installations
-
 ## 🤝 Credits
 
-**Created by:** [Lil_Batti/iOS12Checker](https://github.com/LilBatti/iOS12Checker)
+**Created by:** [iOS12Checker](https://github.com/iOS12Checker)
 
 **Powered by:** [Spicetify](https://github.com/spicetify) - The amazing tool that makes Spotify customization possible
 

@@ -178,5 +178,5 @@ Spotify updates overwrite Spicetify patches. Simply re-run SpotiPatch and click 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/LilBatti/iOS12Checker">Lil_Batti/iOS12Checker</a>
+  Made with ❤️ by <a href="https://github.com/iOS12Checker">Lil_Batti/iOS12Checker</a>
 </p>

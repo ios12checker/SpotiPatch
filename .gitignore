@@ -9,9 +9,6 @@ SpotiPatch-Release/
 bin/
 obj/
 
-# Downloaded scripts ( fetched at build time )
-Source/SpotiPatch-Installer/Scripts/
-
 # Logs and data
 Data/
 *.log

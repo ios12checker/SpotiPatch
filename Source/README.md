@@ -1,108 +1,66 @@
-# 🎵 SpotiPatch - Spicetify GUI Installer
+# SpotiPatch
 
-A user-friendly graphical installer for **Spicetify** on Windows. No coding required - just double-click and install!
+SpotiPatch is a Windows installer for Spicetify CLI and Spicetify Marketplace. It is available as a self-contained WPF application and as a standalone PowerShell script.
 
----
+## Requirements
 
-## 📥 Quick Start
+- Windows 10 or later
+- Spotify installed from spotify.com, not the Microsoft Store
+- Spotify opened and logged in at least once
+- Internet access during installation
 
-1. **Download** this folder
-2. **Double-click** `Install-Spicetify.bat`
-3. **Click** "Install Spicetify" in the GUI
-4. **Restart** Spotify when done
+Run SpotiPatch as a normal user. Do not use **Run as administrator**. Spicetify modifies files owned by the normal Windows account, and elevated execution can make those files inaccessible to Spotify.
 
----
+## WPF application
 
-## ✅ Prerequisites
+Build and run:
 
-Before installing, make sure you have:
+```powershell
+dotnet build .\SpotiPatch.sln -c Release
+dotnet run --project .\SpotiPatch-Installer\SpotiPatch-Installer.csproj
+```
 
-- [x] **Spotify** installed from [spotify.com](https://www.spotify.com/download/)
-- [x] **Logged into Spotify** for at least 60 seconds (this creates required config files)
+Create a self-contained single-file executable:
 
----
+```powershell
+dotnet publish .\SpotiPatch-Installer\SpotiPatch-Installer.csproj `
+  -c Release `
+  -r win-x64 `
+  --self-contained true `
+  -p:PublishSingleFile=true
+```
 
-## 📦 What's Included
+The installer scripts in `SpotiPatch-Installer\Scripts` are embedded in the executable. Spicetify binaries and Marketplace assets are downloaded from the official Spicetify repositories while installation runs.
 
-| File | Description |
-|------|-------------|
-| `Install-Spicetify.bat` | Double-click this to start the installer |
-| `SpotiPatch-Installer.ps1` | The actual installer (GUI) - don't run directly |
-| `README.md` | This file |
+Logs are written to:
 
----
+```text
+%LOCALAPPDATA%\SpotiPatch\Logs
+```
 
-## 🚀 Installation Steps
+## PowerShell application
 
-1. **Close Spotify** completely (check system tray)
-2. Run `Install-Spicetify.bat`
-3. The GUI will open:
-   - Shows installation progress
-   - Displays detailed logs
-   - Handles everything automatically
-4. Wait for "Installation Complete!" message
-5. **Restart Spotify**
-6. Look for the **Marketplace** tab in Spotify's sidebar
+```powershell
+.\SpotiPatch-Installer.ps1
+.\SpotiPatch-Installer.ps1 -Silent
+.\SpotiPatch-Installer.ps1 -Force
+.\SpotiPatch-Installer.ps1 -Uninstall
+```
 
----
+The PowerShell version stores logs in a `Data` directory beside the script.
 
-## 🎨 Using Spicetify
+## After Spotify updates
 
-After installation:
+Use the WPF application's re-apply action, or run:
 
-1. Open Spotify
-2. Click the **Marketplace** tab in the left sidebar
-3. Browse and install:
-   - **Themes** - Change Spotify's appearance
-   - **Extensions** - Add new features
-   - **Snippets** - Small UI tweaks
+```powershell
+spicetify restore backup apply
+```
 
----
+## Uninstall
 
-## 🔄 Updating
+The uninstall action attempts to restore Spotify, removes known Spicetify directories, and removes Spicetify entries from the user PATH.
 
-When Spotify updates, you may need to re-apply Spicetify:
+## License
 
-1. Open PowerShell or Command Prompt
-2. Run: `spicetify restore backup apply`
-
----
-
-## ❓ Troubleshooting
-
-### "Spicetify command not found"
-- Restart your terminal/PowerShell
-- Or restart your computer
-
-### "Cannot find Spotify.exe"
-- Make sure Spotify is installed from the official website
-- Not the Microsoft Store version
-
-### "Access denied" errors
-- Right-click `Install-Spicetify.bat` → "Run as administrator"
-
-### Spotify reverts after update
-- This is normal after Spotify updates
-- Run `spicetify backup apply` to restore
-
----
-
-## 🛡️ Safety
-
-This installer:
-- ✅ Only downloads from official Spicetify repositories
-- ✅ Does not modify system files
-- ✅ Can be uninstalled via `spicetify restore`
-- ✅ Is open source - you can inspect the code
-
----
-
-## 📚 More Info
-
-- **Spicetify Docs**: https://spicetify.app/docs
-- **Marketplace**: https://github.com/spicetify/marketplace
-- **Themes & Extensions**: Browse via the Marketplace tab in Spotify
-
----
-
-Made with 💚 for the Spotify modding community
+MIT. See `LICENSE` in the repository root.

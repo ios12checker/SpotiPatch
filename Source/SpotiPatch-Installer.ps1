@@ -8,7 +8,7 @@ param(
 )
 
 # Configuration
-$script:Version = "1.8"
+$script:Version = "1.9"
 $script:DataDir = Join-Path $PSScriptRoot "Data"
 $script:LogFile = Join-Path $script:DataDir "SpotiPatch_Log_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss').txt"
 
@@ -16,7 +16,7 @@ function Initialize-Environment {
     if (!(Test-Path $script:DataDir)) {
         New-Item -ItemType Directory -Path $script:DataDir -Force | Out-Null
     }
-    
+
     $header = @"
 SpotiPatch Installer Log v$script:Version
 ================================
@@ -35,7 +35,7 @@ function Write-Log {
     $timestamp = Get-Date -Format "HH:mm:ss"
     $logLine = "[$timestamp] [$Level] $Message"
     Add-Content -Path $script:LogFile -Value $logLine -Encoding UTF8
-    
+
     switch ($Level) {
         "ERROR" { Write-Host $logLine -ForegroundColor Red }
         "WARN"  { Write-Host $logLine -ForegroundColor Yellow }
@@ -43,6 +43,12 @@ function Write-Log {
         "STEP"  { Write-Host $logLine -ForegroundColor Cyan }
         default { Write-Host $logLine -ForegroundColor Gray }
     }
+}
+
+function Test-IsAdministrator {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
 function Show-Header {
@@ -82,20 +88,25 @@ function Show-Prerequisites {
 function Test-ExistingInstallation {
     $localAppData = $env:LOCALAPPDATA
     $userProfile = $env:USERPROFILE
-    
+
     $spicetifyPaths = @(
         Join-Path $userProfile ".spicetify\spicetify.exe"
         Join-Path $localAppData "spicetify\spicetify.exe"
     )
-    
+
     $marketplacePaths = @(
+        Join-Path $env:APPDATA "spicetify\CustomApps\marketplace"
         Join-Path $userProfile ".spicetify\CustomApps\marketplace"
         Join-Path $localAppData "spicetify\CustomApps\marketplace"
     )
-    
+
     $spicetifyInstalled = $spicetifyPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-    $marketplaceInstalled = $marketplacePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-    
+    $marketplaceInstalled = $marketplacePaths | Where-Object {
+        (Test-Path $_) -and
+        (Test-Path (Join-Path $_ "manifest.json")) -and
+        (Test-Path (Join-Path $_ "index.js"))
+    } | Select-Object -First 1
+
     return @{
         Spicetify = [bool]$spicetifyInstalled
         Marketplace = [bool]$marketplaceInstalled
@@ -117,160 +128,158 @@ function Complete-ProgressBar {
 function Install-SpicetifyCLI {
     Write-Log "Starting installation..." -Level "STEP"
     $url = "https://raw.githubusercontent.com/spicetify/cli/main/install.ps1"
-    
+
     try {
         Show-ProgressBar -Percent 10 -Status "Downloading..."
         $script = Invoke-WebRequest -Uri $url -UseBasicParsing -ErrorAction Stop
-        
+
         Show-ProgressBar -Percent 30 -Status "Installing..."
         $patchedScript = @"
 function Read-Host { return 'Y' }`n`$Host.UI.RawUI | Add-Member -MemberType ScriptMethod -Name Flushinputbuffer -Value {} -Force`n`$Host.UI | Add-Member -MemberType ScriptMethod -Name PromptForChoice -Value { return 0 } -Force`n
 "@ + $script.Content
-        
-        # Run in background job to prevent exit from killing our script
-        $job = Start-Job -ScriptBlock { 
+
+        $job = Start-Job -ScriptBlock {
             param($code)
             Invoke-Expression $code 2>&1 | ForEach-Object { $_.ToString() }
         } -ArgumentList $patchedScript
-        
-        # Wait for job with timeout
-        $job | Wait-Job -Timeout 120 | Out-Null
-        
-        # Get output (suppress errors)
+
+        $completed = $job | Wait-Job -Timeout 600
+        if (!$completed) {
+            $job | Stop-Job -ErrorAction SilentlyContinue
+            $job | Remove-Job -Force
+            Write-Log "Installation timed out after 10 minutes" -Level "ERROR"
+            return $false
+        }
+
         $output = $job | Receive-Job 2>$null
         $job | Remove-Job -Force
-        
-        # Log output (filter out error lines)
+
         $output | ForEach-Object {
             if ($_ -and $_ -notmatch '^NotSpecified:|RemoteException|NativeCommandError') {
                 Write-Log ($_ | Out-String).Trim()
             }
         }
-        
-        Show-ProgressBar -Percent 60 -Status "CLI installed"
-        Write-Log "Installation successful" -Level "SUCCESS"
+
+        $installed = Test-ExistingInstallation
+        if (!$installed.Spicetify) {
+            Write-Log "spicetify.exe was not found after installation" -Level "ERROR"
+            return $false
+        }
+        if (!$installed.Marketplace) {
+            Write-Log "Marketplace was not found after installation" -Level "ERROR"
+            return $false
+        }
+
+        Show-ProgressBar -Percent 60 -Status "CLI and Marketplace installed"
+        Write-Log "Installation verified" -Level "SUCCESS"
         return $true
     }
     catch {
         Write-Log "Failed: $($_.Exception.Message)" -Level "ERROR"
-        return $true  # Continue anyway
+        return $false
     }
 }
 
 function Invoke-SpicetifyApply {
+    param([switch]$RebuildBackup)
+
     Write-Log "Applying Spicetify..." -Level "STEP"
     Show-ProgressBar -Percent 70 -Status "Preparing..."
-    
-    # Find spicetify
+
     $localAppData = $env:LOCALAPPDATA
     $userProfile = $env:USERPROFILE
-    
+
     $paths = @(
         Join-Path $userProfile ".spicetify\spicetify.exe"
         Join-Path $localAppData "spicetify\spicetify.exe"
     )
-    
+
     $spicetifyPath = $paths | Where-Object { Test-Path $_ } | Select-Object -First 1
-    
+
     if (!$spicetifyPath) {
         Write-Log "spicetify.exe not found" -Level "ERROR"
         return $false
     }
-    
+
     Write-Log "Found: $spicetifyPath" -Level "INFO"
-    
-    # Get spicetify directory and add to PATH for this session
+
     $spicetifyDir = Split-Path $spicetifyPath -Parent
     $env:PATH = "$env:PATH;$spicetifyDir"
-    
-    # Close Spotify first
+
     Show-ProgressBar -Percent 75 -Status "Closing Spotify..."
     Get-Process "spotify" -ErrorAction SilentlyContinue | ForEach-Object {
         try { $_.Kill(); Start-Sleep -Seconds 2 } catch {}
     }
-    
-    # Wait for Spotify to close
+
     Start-Sleep -Seconds 3
-    
     Show-ProgressBar -Percent 80 -Status "Applying patches..."
-    
+
     try {
-        # Step 1: Create backup
-        Show-ProgressBar -Percent 82 -Status "Creating backup..."
-        $job1 = Start-Job -ScriptBlock {
-            param($exe, $dir)
-            Set-Location $dir
-            & $exe backup 2>&1
-            $LASTEXITCODE
-        } -ArgumentList $spicetifyPath, $spicetifyDir
-        
-        $completed1 = $job1 | Wait-Job -Timeout 30
-        if ($completed1) {
-            $result1 = Receive-Job $job1
-            Remove-Job $job1
-            for ($i = 0; $i -lt $result1.Count - 1; $i++) {
-                if ($result1[$i]) { Write-Log ($result1[$i] | Out-String).Trim() }
-            }
-        } else {
-            Remove-Job $job1 -Force
+        $arguments = if ($RebuildBackup) {
+            @("restore", "backup", "apply")
         }
-        
-        # Step 2: Apply
+        else {
+            @("apply")
+        }
+
         Show-ProgressBar -Percent 90 -Status "Applying..."
-        $job2 = Start-Job -ScriptBlock {
-            param($exe, $dir)
+        Write-Log "Running: spicetify $($arguments -join ' ')" -Level "INFO"
+        $job = Start-Job -ScriptBlock {
+            param($exe, $dir, $commandArguments)
             Set-Location $dir
-            & $exe apply 2>&1
+            & $exe $commandArguments 2>&1
             $LASTEXITCODE
-        } -ArgumentList $spicetifyPath, $spicetifyDir
-        
-        $completed2 = $job2 | Wait-Job -Timeout 45
-        
-        if ($completed2) {
-            $result2 = Receive-Job $job2
-            Remove-Job $job2
-            
-            for ($i = 0; $i -lt $result2.Count - 1; $i++) {
-                if ($result2[$i]) { Write-Log ($result2[$i] | Out-String).Trim() }
+        } -ArgumentList $spicetifyPath, $spicetifyDir, (,$arguments)
+
+        $completed = $job | Wait-Job -Timeout 300
+
+        if ($completed) {
+            $result = Receive-Job $job
+            Remove-Job $job
+
+            for ($i = 0; $i -lt $result.Count - 1; $i++) {
+                if ($result[$i]) { Write-Log ($result[$i] | Out-String).Trim() }
             }
-            
-            $exitCode = $result2[-1]
-            
+
+            $exitCode = $result[-1]
+
             if ($exitCode -eq 0) {
                 Show-ProgressBar -Percent 100 -Status "Complete!"
                 Write-Log "Applied successfully" -Level "SUCCESS"
-            } else {
-                Show-ProgressBar -Percent 100 -Status "Partial"
-                Write-Log "Apply finished (code: $exitCode)" -Level "WARN"
+                return $true
             }
-        } else {
-            Remove-Job $job2 -Force
-            Show-ProgressBar -Percent 100 -Status "Timeout"
-            Write-Log "Apply timed out" -Level "WARN"
+            else {
+                Show-ProgressBar -Percent 100 -Status "Failed"
+                Write-Log "Spicetify failed with exit code $exitCode" -Level "ERROR"
+                return $false
+            }
         }
-        
-        Write-Log "Manual run if needed: spicetify apply" -Level "INFO"
-        return $true
+        else {
+            $job | Stop-Job -ErrorAction SilentlyContinue
+            Remove-Job $job -Force
+            Show-ProgressBar -Percent 100 -Status "Timeout"
+            Write-Log "Apply timed out after 5 minutes" -Level "ERROR"
+            return $false
+        }
     }
     catch {
-        Write-Log "Apply error: $($_.Exception.Message)" -Level "WARN"
-        Show-ProgressBar -Percent 100 -Status "Manual needed"
-        Write-Log "Manual run: spicetify apply" -Level "INFO"
-        return $true
+        Write-Log "Apply error: $($_.Exception.Message)" -Level "ERROR"
+        Show-ProgressBar -Percent 100 -Status "Failed"
+        return $false
     }
 }
 
 function Invoke-Uninstall {
+    $success = $true
     Show-Header
     Write-Host ""
     Write-Host "    Uninstalling Spicetify..." -ForegroundColor Yellow
     Write-Host ""
-    
+
     $localAppData = $env:LOCALAPPDATA
     $appData = $env:APPDATA
     $userProfile = $env:USERPROFILE
-    
-    # Kill any running spicetify processes first
+
     Write-Log "Stopping Spicetify processes..." -Level "STEP"
     Get-Process | Where-Object { $_.Name -like "*spicetify*" -or $_.Name -like "*spotify*" } | ForEach-Object {
         try {
@@ -279,59 +288,61 @@ function Invoke-Uninstall {
         }
         catch { }
     }
-    
-    # Find spicetify.exe
+
     $possiblePaths = @(
         Join-Path $userProfile ".spicetify"
         Join-Path $localAppData "spicetify"
     )
-    
+
     $spicetifyPath = $possiblePaths | ForEach-Object { Join-Path $_ "spicetify.exe" } | Where-Object { Test-Path $_ } | Select-Object -First 1
-    
-    # Step 1: Restore Spotify
+
     if ($spicetifyPath) {
         Write-Log "Restoring Spotify..." -Level "STEP"
         try {
             & $spicetifyPath restore 2>&1 | ForEach-Object { Write-Log ($_ | Out-String).Trim() }
-            Write-Log "Spotify restored" -Level "SUCCESS"
+            if ($LASTEXITCODE -eq 0) {
+                Write-Log "Spotify restored" -Level "SUCCESS"
+            }
+            else {
+                Write-Log "Restore failed with exit code $LASTEXITCODE" -Level "WARN"
+                $success = $false
+            }
         }
         catch {
             Write-Log "Warning: Could not restore" -Level "WARN"
+            $success = $false
         }
     }
-    
-    # Wait a moment for file handles to release
+
     Start-Sleep -Seconds 2
-    
-    # Step 2: Remove directories
+
     $dirsToRemove = @(
         Join-Path $appData "spicetify"
         Join-Path $localAppData "spicetify"
         Join-Path $userProfile ".spicetify"
         Join-Path $userProfile "spicetify-cli"
     )
-    
+
     foreach ($dir in $dirsToRemove) {
         if (Test-Path $dir) {
             Write-Log "Removing: $dir" -Level "STEP"
             try {
-                # Try to remove, but don't fail if some files are locked
                 Remove-Item -Path $dir -Recurse -Force -ErrorAction SilentlyContinue
-                # Check if it was removed
                 if (!(Test-Path $dir)) {
                     Write-Log "Removed" -Level "SUCCESS"
                 }
                 else {
                     Write-Log "Partially removed (some files in use)" -Level "WARN"
+                    $success = $false
                 }
             }
             catch {
                 Write-Log "Warning: Could not remove" -Level "WARN"
+                $success = $false
             }
         }
     }
-    
-    # Step 3: Clean PATH
+
     Write-Log "Cleaning PATH..." -Level "STEP"
     try {
         $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
@@ -344,8 +355,9 @@ function Invoke-Uninstall {
     }
     catch {
         Write-Log "Warning: Could not clean PATH" -Level "WARN"
+        $success = $false
     }
-    
+
     Write-Host ""
     Write-Host "    Uninstallation complete!" -ForegroundColor Green
     Write-Host "    Spicetify has been removed from your system." -ForegroundColor Gray
@@ -354,16 +366,18 @@ function Invoke-Uninstall {
         Write-Host "    Press any key to exit..." -ForegroundColor DarkGray
         $null = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     }
+
+    return $success
 }
 
 function Show-Completion {
     param([bool]$Success)
-    
+
     Complete-ProgressBar
     Write-Host ""
     Write-Host "    ===============================================" -ForegroundColor Green
     Write-Host ""
-    
+
     if ($Success) {
         Write-Host "    Installation completed successfully!" -ForegroundColor Green
         Write-Host ""
@@ -381,31 +395,36 @@ function Show-Completion {
         Write-Host "    Check the log:" -ForegroundColor Gray
         Write-Host "      $script:LogFile" -ForegroundColor Yellow
     }
-    
+
     Write-Host ""
     Write-Host "    ===============================================" -ForegroundColor Green
     Write-Host ""
-    
+
     if (!$Silent) {
         Write-Host "    Press any key to exit..." -ForegroundColor DarkGray
         $null = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     }
 }
 
-# Main execution
 Initialize-Environment
 
-# Handle uninstall
+if (Test-IsAdministrator) {
+    Write-Log "SpotiPatch must not be run as administrator. Start it normally and try again." -Level "ERROR"
+    Write-Host ""
+    Write-Host "    Running Spicetify as administrator can make Spotify files inaccessible" -ForegroundColor Yellow
+    Write-Host "    to your normal Windows account." -ForegroundColor Yellow
+    exit 1
+}
+
 if ($Uninstall) {
-    Invoke-Uninstall
-    exit 0
+    $result = Invoke-Uninstall
+    if ($result) { exit 0 } else { exit 1 }
 }
 
 Show-Header
 Show-Features
 Show-Prerequisites
 
-# Check existing
 $existing = Test-ExistingInstallation
 
 if ($existing.Spicetify -and $existing.Marketplace -and !$Force) {
@@ -413,18 +432,18 @@ if ($existing.Spicetify -and $existing.Marketplace -and !$Force) {
     Write-Host "    Spicetify and Marketplace are already installed!" -ForegroundColor Green
     Write-Host "    Location: $($existing.SpicetifyPath)" -ForegroundColor DarkGray
     Write-Host ""
-    
+
     if (!$Silent) {
         $response = Read-Host "    Would you like to re-apply? (Y/N)"
         if ($response -eq 'Y' -or $response -eq 'y') {
-            $result = Invoke-SpicetifyApply
+            $result = Invoke-SpicetifyApply -RebuildBackup
             Show-Completion -Success $result
+            if (!$result) { exit 1 }
         }
     }
     exit 0
 }
 
-# Show menu
 if (!$Silent) {
     Write-Host ""
     Write-Host "    Options:" -ForegroundColor White
@@ -433,11 +452,11 @@ if (!$Silent) {
     Write-Host "      [C] Cancel" -ForegroundColor Gray
     Write-Host ""
     $response = Read-Host "    Select option (I/U/C)"
-    
+
     switch ($response.ToUpper()) {
-        'U' { 
-            Invoke-Uninstall
-            exit 0
+        'U' {
+            $result = Invoke-Uninstall
+            if ($result) { exit 0 } else { exit 1 }
         }
         'C' {
             exit 0
@@ -449,10 +468,9 @@ Write-Host ""
 Write-Host "    Installing..." -ForegroundColor Cyan
 Write-Host ""
 
-# Install
 $success = $true
 
-if (!$existing.Spicetify -or $Force) {
+if (!$existing.Spicetify -or !$existing.Marketplace -or $Force) {
     $cliResult = Install-SpicetifyCLI
     $success = $success -and $cliResult
 }

@@ -1,94 +1,50 @@
-# SpotiPatch Installer - C# WPF Edition
+# SpotiPatch Installer
 
-A professional, modern installer for Spicetify built with C# and WPF.
+A self-contained .NET 8 WPF installer for Spicetify CLI and Spicetify Marketplace.
 
-## Features
+## Runtime behavior
 
-- **Modern Spotify-inspired UI** - Dark theme with rounded corners and smooth animations
-- **Professional look** - Borderless window, pill-shaped buttons, card-based layout
-- **Embedded scripts** - No external downloads, everything is self-contained
-- **Async installation** - Non-blocking UI with real progress updates
-- **Auto-patching** - Automatically handles all prompts without user intervention
-- **Single-file executable** - Can be distributed as one `.exe` file
-- **Proper error handling** - Try-catch with meaningful error messages
+1. Refuses to run installation, apply, or uninstall operations with administrator privileges.
+2. Runs the embedded Spicetify CLI installer snapshot.
+3. Verifies `spicetify.exe` and adds its directory to the current process PATH.
+4. Runs the embedded Marketplace installer snapshot.
+5. Verifies that Marketplace contains its required application files.
+6. Closes Spotify and runs `spicetify apply`.
+7. Reports success only when every required step succeeds.
 
-## Requirements
+Re-apply uses:
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- Windows 10 or later
-
-## Building
-
-### Quick Build (Development)
-
-```bash
-cd SpotiPatch-Installer
-dotnet build
+```powershell
+spicetify restore backup apply
 ```
 
-### Build Single-File Executable (Release)
+Installer logs are stored in `%LOCALAPPDATA%\SpotiPatch\Logs`.
 
-```bash
-cd SpotiPatch-Installer
-dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+## Build
+
+```powershell
+dotnet build -c Release
 ```
 
-The output will be in:
-```
-bin\Release\net8.0-windows\win-x64\publish\SpotiPatch-Installer.exe
-```
+Publish:
 
-### Build with Compression (Smaller File)
-
-```bash
-dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:EnableCompressionInSingleFile=true
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-## Project Structure
+## Project structure
 
-```
+```text
 SpotiPatch-Installer/
-├── SpotiPatch-Installer.csproj    # Project file
-├── App.xaml                        # App resources & styles
-├── App.xaml.cs                     # App code-behind
-├── MainWindow.xaml                 # Main UI (XAML)
-├── MainWindow.xaml.cs              # Main logic (C#)
-├── AssemblyInfo.cs                 # Assembly metadata
-├── Scripts/                        # Embedded PowerShell scripts
+├── App.xaml
+├── App.xaml.cs
+├── AssemblyInfo.cs
+├── MainWindow.xaml
+├── MainWindow.xaml.cs
+├── Scripts/
 │   ├── spicetify-cli-install.ps1
 │   └── spicetify-marketplace-install.ps1
-└── README.md                       # This file
+└── SpotiPatch-Installer.csproj
 ```
 
-## How It Works
-
-1. **UI loads** - User sees a modern, Spotify-inspired interface
-2. **Click Install** - Shows confirmation dialog
-3. **Script patching** - Embedded PowerShell scripts are auto-patched to:
-   - Replace `Read-Host` prompts with auto-`"Y"` responses
-   - Replace `PromptForChoice` with auto-select first option (0)
-   - Remove `FlushInputBuffer` calls that can hang GUI apps
-4. **Async execution** - Scripts run in background with real-time log output
-5. **Progress tracking** - Progress bar updates as each step completes
-6. **Spotify detection** - Automatically finds Spotify installation
-7. **Apply** - Runs `spicetify backup apply` to activate
-
-## Customization
-
-### Changing Colors
-
-Edit `App.xaml` and modify the color resources:
-
-```xml
-<Color x:Key="SpotifyGreen">#1DB954</Color>
-<Color x:Key="BackgroundDark">#121212</Color>
-<!-- etc -->
-```
-
-### Adding a Window Icon
-
-Add a `spotify-icon.ico` file to the project root and it will be included automatically.
-
-## License
-
-MIT License - Feel free to use and modify!
+The installer scripts are embedded for reproducible builds. They still download Spicetify release binaries and Marketplace assets from the official repositories at runtime.
